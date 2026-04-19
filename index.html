@@ -1031,8 +1031,8 @@ function showApiKeyModal(force) {
 }
 function saveApiKey() {
   const val = document.getElementById('apikey-input').value.trim();
-  if (!val.startsWith('sk-ant-')) {
-    showToast('❌ Key should start with sk-ant-');
+  if (!val || val.length < 10) {
+    showToast('❌ Please enter a valid API key');
     return;
   }
   apiKey = val;
