@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🪨 Rock Explorer!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brown: #8B5E3C;
+    --brown-dark: #5C3D1E;
+    --brown-light: #C49A6C;
+    --orange: #FF7B2C;
+    --yellow: #FFD166;
+    --green: #4CAF50;
+    --blue: #4FC3F7;
+    --purple: #CE93D8;
+    --red: #EF5350;
+    --bg: #FFF8F0;
+    --card: #FFFDF8;
+    --text: #2D1B00;
+    --text-light: #7A5C3A;
+    --shadow: 0 4px 20px rgba(139,94,60,0.18);
+    --radius: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === HEADER === */
+  .header {
+    background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown) 60%, var(--brown-light) 100%);
+    padding: 16px 20px 10px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .header-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem;
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+    position: relative;
+  }
+  .header-sub {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.9rem;
+    font-weight: 700;
+    position: relative;
+  }
+
+  /* === TABS === */
+  .tabs {
+    display: flex;
+    background: var(--brown-dark);
+    padding: 0 10px;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 12px 8px 10px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tab-btn .tab-icon { font-size: 1.5rem; }
+  .tab-btn.active {
+    color: var(--yellow);
+    border-bottom-color: var(--yellow);
+  }
+  .tab-btn:hover { color: white; }
+
+  /* === PAGES === */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* === SCAN PAGE === */
+  .scan-hero {
+    background: linear-gradient(135deg, #3E2009 0%, #7A4A1E 100%);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .scan-hero::after {
+    content: '🪨';
+    position: absolute;
+    right: -10px; bottom: -10px;
+    font-size: 5rem;
+    opacity: 0.15;
+    transform: rotate(-15deg);
+  }
+  .scan-hero h2 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--yellow);
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+  }
+  .scan-hero p { color: rgba(255,255,255,0.8); font-size: 0.9rem; font-weight: 600; }
+
+  .camera-area {
+    background: #1a1a1a;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+    position: relative;
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid var(--brown-light);
+  }
+  #camera-video {
+    width: 100%; height: 260px;
+    object-fit: cover;
+    display: none;
+  }
+  #camera-canvas { display: none; }
+  #preview-img {
+    width: 100%; height: 260px;
+    object-fit: cover;
+    display: none;
+    border-radius: 14px;
+  }
+  .camera-placeholder {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    padding: 30px;
+  }
+  .camera-placeholder .cam-icon { font-size: 4rem; margin-bottom: 12px; }
+  .camera-placeholder p { font-weight: 700; font-size: 1rem; }
+
+  .cam-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+  }
+  .cam-corner {
+    position: absolute;
+    width: 30px; height: 30px;
+    border-color: var(--yellow);
+    border-style: solid;
+    opacity: 0.8;
+  }
+  .cam-corner.tl { top: 12px; left: 12px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+  .cam-corner.tr { top: 12px; right: 12px; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+  .cam-corner.bl { bottom: 12px; left: 12px; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+  .cam-corner.br { bottom: 12px; right: 12px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .big-btn {
+    flex: 1;
+    padding: 16px 12px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    position: relative;
+    top: 0;
+  }
+  .big-btn:active { top: 4px; box-shadow: none; }
+  .big-btn .btn-icon { font-size: 2rem; }
+  .big-btn.btn-camera { background: linear-gradient(135deg, var(--orange), #E65100); color: white; }
+  .big-btn.btn-snap { background: linear-gradient(135deg, var(--yellow), #F9A825); color: var(--brown-dark); }
+  .big-btn.btn-upload { background: linear-gradient(135deg, var(--blue), #0288D1); color: white; }
+  .big-btn.btn-identify { background: linear-gradient(135deg, var(--green), #2E7D32); color: white; width: 100%; }
+  .big-btn:disabled { opacity: 0.45; cursor: not-allowed; top: 0; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+
+  #file-input { display: none; }
+
+  /* === RESULT CARD === */
+  .result-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 3px solid var(--brown-light);
+    display: none;
+    animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .result-card.show { display: block; }
+  @keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 2px dashed var(--brown-light);
+  }
+  .result-rock-img {
+    width: 80px; height: 80px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 3px solid var(--brown-light);
+    flex-shrink: 0;
+  }
+  .result-rock-emoji { font-size: 3.5rem; flex-shrink: 0; }
+  .result-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    color: var(--brown-dark);
+  }
+  .rock-type-badge {
+    display: inline-block;
+    background: var(--yellow);
+    color: var(--brown-dark);
+    font-size: 0.7rem;
+    font-weight: 900;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .result-section { margin-bottom: 14px; }
+  .result-section h3 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--brown);
+    font-size: 1rem;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .result-section p {
+    color: var(--text);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    font-weight: 600;
+  }
+  .fun-fact-box {
+    background: linear-gradient(135deg, #FFF9C4, #FFF3CD);
+    border-radius: 14px;
+    padding: 12px 14px;
+    border-left: 4px solid var(--yellow);
+  }
+  .save-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--brown), var(--brown-dark));
+    color: var(--yellow);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-top: 14px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+    position: relative; top: 0;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .save-btn:active { top: 4px; box-shadow: none; }
+
+  /* === LOADING === */
+  .loading-overlay {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, var(--brown-dark), var(--brown));
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+  }
+  .loading-overlay.show { display: block; }
+  .rock-bounce {
+    font-size: 3rem;
+    display: inline-block;
+    animation: bounce 0.6s infinite alternate;
+  }
+  @keyframes bounce {
+    from { transform: translateY(0) rotate(-5deg); }
+    to { transform: translateY(-15px) rotate(5deg); }
+  }
+  .loading-text {
+    font-family: 'Fredoka One', cursive;
+    color: var(--yellow);
+    font-size: 1.3rem;
+    margin-top: 14px;
+  }
+  .loading-dots::after {
+    content: '';
+    animation: dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
+  /* === COLLECTION PAGE === */
+  .collection-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .collection-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    color: var(--brown-dark);
+  }
+  .count-badge {
+    background: var(--orange);
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 900;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  .filter-chips {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .chip {
+    white-space: nowrap;
+    padding: 7px 16px;
+    border-radius: 30px;
+    border: 2px solid var(--brown-light);
+    background: white;
+    color: var(--brown);
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chip.active, .chip:hover {
+    background: var(--brown);
+    color: white;
+    border-color: var(--brown);
+  }
+
+  .rock-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .rock-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--brown-light);
+    cursor: pointer;
+    transition: transform 0.2s;
+    animation: popIn 0.35s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .rock-card:hover { transform: scale(1.03); }
+  .rock-card-img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    background: linear-gradient(135deg, #E8D5B7, #C9A87C);
+  }
+  .rock-card-img img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+  }
+  .rock-card-info { padding: 10px 12px; }
+  .rock-card-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--brown-dark);
+    margin-bottom: 4px;
+  }
+  .rock-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .rock-card-type {
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--text-light);
+    letter-spacing: 0.5px;
+  }
+  .found-count {
+    background: var(--orange);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    padding: 2px 8px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .local-badge {
+    background: var(--green);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-light);
+  }
+  .empty-state .e-icon { font-size: 4rem; margin-bottom: 14px; }
+  .empty-state h3 { font-family: 'Fredoka One', cursive; font-size: 1.4rem; margin-bottom: 8px; }
+  .empty-state p { font-size: 0.9rem; font-weight: 600; }
+
+  /* === DETAIL MODAL === */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 480px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 20px;
+    animation: slideUp 0.35s cubic-bezier(.175,.885,.32,1.275);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--brown-light);
+    border-radius: 2px;
+    margin: 0 auto 18px;
+  }
+  .modal-rock-banner {
+    background: linear-gradient(135deg, var(--brown-dark), var(--brown));
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .modal-rock-img {
+    width: 90px; height: 90px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 3px solid var(--yellow);
+  }
+  .modal-rock-emoji { font-size: 4rem; }
+  .modal-rock-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.7rem;
+    color: var(--yellow);
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  }
+  .modal-found-count {
+    color: rgba(255,255,255,0.9);
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-box {
+    background: white;
+    border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+    border: 2px solid var(--brown-light);
+    box-shadow: var(--shadow);
+  }
+  .stat-box .s-label {
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--text-light);
+    letter-spacing: 0.5px;
+  }
+  .stat-box .s-val {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: var(--brown-dark);
+    margin-top: 2px;
+  }
+  .detail-section {
+    background: white;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+    border: 2px solid var(--brown-light);
+  }
+  .detail-section h4 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--brown);
+    margin-bottom: 8px;
+    font-size: 1rem;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .detail-section p { font-size: 0.88rem; font-weight: 600; line-height: 1.6; color: var(--text); }
+  .delete-btn {
+    width: 100%;
+    padding: 14px;
+    background: #FFEBEE;
+    color: var(--red);
+    border: 2px solid #FFCDD2;
+    border-radius: var(--radius);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+  .delete-btn:hover { background: var(--red); color: white; }
+  .close-modal-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--brown);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 6px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  }
+
+  /* === BC ROCKS PAGE === */
+  .bc-header {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32, #43A047);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .bc-header h2 {
+    font-family: 'Fredoka One', cursive;
+    color: white;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  }
+  .bc-header p { color: rgba(255,255,255,0.85); font-weight: 700; font-size: 0.85rem; margin-top: 4px; }
+  .bc-header::after { content: '🏔️'; position: absolute; right: 10px; bottom: -5px; font-size: 4rem; opacity: 0.3; }
+
+  .bc-rock-list { display: flex; flex-direction: column; gap: 12px; }
+  .bc-rock-item {
+    background: white;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 2px solid #C8E6C9;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .bc-rock-item:hover { transform: translateX(4px); }
+  .bc-rock-icon {
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #E8F5E9, #A5D6A7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+    border: 2px solid #A5D6A7;
+  }
+  .bc-rock-info { flex: 1; }
+  .bc-rock-name { font-family: 'Fredoka One', cursive; font-size: 1.05rem; color: var(--brown-dark); }
+  .bc-rock-where { font-size: 0.78rem; font-weight: 700; color: var(--green); margin-top: 2px; }
+  .bc-rock-desc { font-size: 0.78rem; color: var(--text-light); font-weight: 600; margin-top: 2px; }
+  .found-here-btn {
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 5px 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  .found-here-btn:active { transform: scale(0.9); }
+
+  /* === GEMS PAGE === */
+  .gems-header {
+    background: linear-gradient(135deg, #4A148C, #7B1FA2, #AB47BC);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .gems-header h2 {
+    font-family: 'Fredoka One', cursive;
+    color: white;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  }
+  .gems-header p { color: rgba(255,255,255,0.85); font-weight: 700; font-size: 0.85rem; margin-top: 4px; }
+  .gems-header::after { content: '💎'; position: absolute; right: 10px; bottom: -5px; font-size: 4rem; opacity: 0.3; }
+
+  .gem-card {
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+    border: 2px solid #E1BEE7;
+    overflow: hidden;
+    box-shadow: 0 3px 14px rgba(74,20,140,0.1);
+  }
+  .gem-card-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    gap: 14px;
+  }
+  .gem-emoji { font-size: 2.4rem; width: 50px; text-align: center; flex-shrink: 0; }
+  .gem-title { flex: 1; }
+  .gem-name { font-family: 'Fredoka One', cursive; font-size: 1.15rem; color: #4A148C; }
+  .gem-value-tag {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #3E2700;
+    font-size: 0.7rem;
+    font-weight: 900;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 3px;
+    display: inline-block;
+  }
+  .gem-arrow { color: #AB47BC; font-size: 1.2rem; transition: transform 0.2s; }
+  .gem-arrow.open { transform: rotate(90deg); }
+  .gem-body {
+    display: none;
+    padding: 0 16px 14px;
+    border-top: 1px dashed #E1BEE7;
+  }
+  .gem-body.show { display: block; }
+  .gem-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .gem-fact {
+    background: #F3E5F5;
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .gem-fact .gf-label { font-size: 0.62rem; font-weight: 900; text-transform: uppercase; color: #7B1FA2; letter-spacing: 0.5px; }
+  .gem-fact .gf-val { font-family: 'Fredoka One', cursive; font-size: 0.95rem; color: #4A148C; margin-top: 2px; }
+  .gem-fun-fact {
+    background: linear-gradient(135deg, #EDE7F6, #F3E5F5);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4A148C;
+    border-left: 4px solid #AB47BC;
+  }
+  .gem-desc { font-size: 0.85rem; font-weight: 600; color: var(--text); line-height: 1.6; margin-top: 10px; }
+
+  /* === TOAST === */
+  .toast {
+    position: fixed;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--brown-dark);
+    color: var(--yellow);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    z-index: 999;
+    transition: transform 0.35s cubic-bezier(.175,.885,.32,1.275);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Stars animation for gems */
+  @keyframes twinkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #f1e8da; }
+  ::-webkit-scrollbar-thumb { background: var(--brown-light); border-radius: 3px; }
+
+  /* === API KEY MODAL === */
+  .apikey-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .apikey-overlay.show { display: flex; }
+  .apikey-box {
+    background: var(--bg);
+    border-radius: 24px;
+    padding: 28px 22px;
+    width: 100%; max-width: 420px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .apikey-icon { font-size: 3.5rem; margin-bottom: 10px; }
+  .apikey-box h2 { font-family: 'Fredoka One', cursive; color: var(--brown-dark); font-size: 1.6rem; margin-bottom: 8px; }
+  .apikey-box p { color: var(--text-light); font-size: 0.88rem; font-weight: 600; line-height: 1.6; margin-bottom: 16px; }
+  .apikey-box a { color: var(--orange); font-weight: 800; }
+  .apikey-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--brown-light);
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    background: white;
+    margin-bottom: 12px;
+    outline: none;
+  }
+  .apikey-input:focus { border-color: var(--orange); }
+  .apikey-save-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--orange), #E65100);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  }
+  .apikey-note {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 12px;
+    font-weight: 600;
+  }
+  .apikey-settings-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.4rem;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+</style>
+</head>
+<body>
+
+<div class="header" style="position:relative;">
+  <div class="header-title">🪨 Rock Explorer!</div>
+  <div class="header-sub">Find, Identify & Collect Rocks!</div>
+  <button class="apikey-settings-btn" onclick="showApiKeyModal(true)" title="API Key Settings">⚙️</button>
+</div>
+
+<!-- API KEY MODAL -->
+<div class="apikey-overlay" id="apikey-overlay">
+  <div class="apikey-box">
+    <div class="apikey-icon">🔑</div>
+    <h2>Enter Your API Key</h2>
+    <p>To identify rocks with AI, you need an Anthropic API key. Get one at:<br>
+    <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br><br>
+    Your key is saved only on this device and never shared with anyone.</p>
+    <input class="apikey-input" type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="apikey-save-btn" onclick="saveApiKey()">🚀 Save & Start Exploring!</button>
+    <div class="apikey-note">🔒 Stored locally on your iPad only</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('scan')" id="tab-scan">
+    <span class="tab-icon">📸</span>
+    Scan
+  </button>
+  <button class="tab-btn" onclick="switchTab('collection')" id="tab-collection">
+    <span class="tab-icon">🎒</span>
+    My Rocks
+  </button>
+  <button class="tab-btn" onclick="switchTab('bc')" id="tab-bc">
+    <span class="tab-icon">🏔️</span>
+    BC Rocks
+  </button>
+  <button class="tab-btn" onclick="switchTab('gems')" id="tab-gems">
+    <span class="tab-icon">💎</span>
+    Gems
+  </button>
+</div>
+
+<!-- SCAN PAGE -->
+<div class="page active" id="page-scan">
+  <div class="scan-hero">
+    <h2>🔍 Rock Detective!</h2>
+    <p>Take a photo of any rock to identify it!</p>
+  </div>
+
+  <div class="camera-area" id="camera-area">
+    <video id="camera-video" autoplay playsinline></video>
+    <canvas id="camera-canvas"></canvas>
+    <img id="preview-img" alt="Rock preview">
+    <div class="cam-overlay">
+      <div class="cam-corner tl"></div>
+      <div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div>
+      <div class="cam-corner br"></div>
+    </div>
+    <div class="camera-placeholder" id="cam-placeholder">
+      <div class="cam-icon">📷</div>
+      <p>Start Camera or Upload a Photo!</p>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="big-btn btn-camera" onclick="toggleCamera()" id="cam-toggle-btn">
+      <span class="btn-icon">📷</span>
+      Camera
+    </button>
+    <button class="big-btn btn-snap" onclick="snapPhoto()" id="snap-btn" disabled>
+      <span class="btn-icon">⚡</span>
+      Snap!
+    </button>
+    <button class="big-btn btn-upload" onclick="document.getElementById('file-input').click()">
+      <span class="btn-icon">🖼️</span>
+      Upload
+    </button>
+  </div>
+  <input type="file" id="file-input" accept="image/*" onchange="handleFileUpload(event)">
+
+  <div style="margin-bottom:16px;">
+    <button class="big-btn btn-identify" onclick="identifyRock()" id="identify-btn" disabled>
+      <span class="btn-icon">🔬</span>
+      Identify This Rock!
+    </button>
+  </div>
+
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="rock-bounce">🪨</div>
+    <div class="loading-text">Analyzing your rock<span class="loading-dots"></span></div>
+    <div style="color:rgba(255,255,255,0.6); font-size:0.85rem; margin-top:8px; font-weight:700;">Rock Expert AI is thinking!</div>
+  </div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-header">
+      <div id="result-rock-display"></div>
+      <div>
+        <div class="result-name" id="result-name">—</div>
+        <div class="rock-type-badge" id="result-type">—</div>
+      </div>
+    </div>
+    <div class="result-section">
+      <h3>📖 What Is It?</h3>
+      <p id="result-desc">—</p>
+    </div>
+    <div class="result-section">
+      <h3>📍 Where to Find It</h3>
+      <p id="result-where">—</p>
+    </div>
+    <div class="result-section">
+      <h3>🔬 Cool Science Stuff</h3>
+      <p id="result-science">—</p>
+    </div>
+    <div class="result-section fun-fact-box">
+      <h3>⭐ Fun Fact!</h3>
+      <p id="result-fun">—</p>
+    </div>
+    <button class="save-btn" onclick="saveToCollection()">
+      <span>🎒</span> Add to My Collection!
+    </button>
+  </div>
+</div>
+
+<!-- COLLECTION PAGE -->
+<div class="page" id="page-collection">
+  <div class="collection-header">
+    <div class="collection-title">🎒 My Rock Collection</div>
+    <div class="count-badge" id="collection-count">0 Rocks</div>
+  </div>
+  <div class="filter-chips">
+    <div class="chip active" onclick="filterCollection('all', this)">All Rocks</div>
+    <div class="chip" onclick="filterCollection('Igneous', this)">🔥 Igneous</div>
+    <div class="chip" onclick="filterCollection('Sedimentary', this)">🌊 Sedimentary</div>
+    <div class="chip" onclick="filterCollection('Metamorphic', this)">💥 Metamorphic</div>
+    <div class="chip" onclick="filterCollection('Mineral', this)">✨ Mineral</div>
+    <div class="chip" onclick="filterCollection('local', this)">🏔️ Local BC</div>
+  </div>
+  <div class="rock-grid" id="rock-grid"></div>
+</div>
+
+<!-- BC ROCKS PAGE -->
+<div class="page" id="page-bc">
+  <div class="bc-header">
+    <h2>🏔️ BC's Amazing Rocks!</h2>
+    <p>Rocks found right here in British Columbia, Canada</p>
+  </div>
+  <div class="bc-rock-list" id="bc-list"></div>
+</div>
+
+<!-- GEMS PAGE -->
+<div class="page" id="page-gems">
+  <div class="gems-header">
+    <h2>💎 Gem Explorer!</h2>
+    <p>Cool gems, their powers, and what they're worth!</p>
+  </div>
+  <div id="gems-list"></div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-rock-banner">
+      <div id="modal-img-area"></div>
+      <div>
+        <div class="modal-rock-name" id="modal-name">—</div>
+        <div class="modal-found-count" id="modal-count">—</div>
+        <div style="margin-top:6px;" id="modal-local-badge"></div>
+      </div>
+    </div>
+    <div class="stat-grid" id="modal-stats"></div>
+    <div class="detail-section">
+      <h4>📖 About this Rock</h4>
+      <p id="modal-desc">—</p>
+    </div>
+    <div class="detail-section">
+      <h4>📍 Where to Find It</h4>
+      <p id="modal-where">—</p>
+    </div>
+    <div class="detail-section" style="border-left: 4px solid var(--yellow); background:#FFFDE7;">
+      <h4>⭐ Fun Fact</h4>
+      <p id="modal-fun">—</p>
+    </div>
+    <button class="delete-btn" onclick="deleteFromCollection()">🗑️ Remove from Collection</button>
+    <button class="close-modal-btn" onclick="document.getElementById('modal-overlay').classList.remove('show')">✅ Close</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ Rock saved!</div>
+
+<script>
+// ========== STATE ==========
+let collection = JSON.parse(localStorage.getItem('rockCollection') || '[]');
+let currentResult = null;
+let currentImageData = null;
+let cameraStream = null;
+let cameraActive = false;
+let selectedModalRockId = null;
+let currentFilter = 'all';
+let apiKey = localStorage.getItem('rockExplorerApiKey') || '';
+
+// ========== API KEY ==========
+function showApiKeyModal(force) {
+  document.getElementById('apikey-overlay').classList.add('show');
+  if (apiKey) document.getElementById('apikey-input').value = apiKey;
+}
+function saveApiKey() {
+  const val = document.getElementById('apikey-input').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    showToast('❌ Key should start with sk-ant-');
+    return;
+  }
+  apiKey = val;
+  localStorage.setItem('rockExplorerApiKey', apiKey);
+  document.getElementById('apikey-overlay').classList.remove('show');
+  showToast('✅ API Key saved! Ready to rock! 🪨');
+}
+
+// ========== BC ROCKS DATA ==========
+const bcRocks = [
+  { name: "Jade", emoji: "🟢", where: "Fraser River, Lillooet, Dease Lake area", desc: "BC's official provincial gemstone! Usually green or white.", type: "Mineral", hardness: "6–7", color: "Green/White" },
+  { name: "Granite", emoji: "⬜", where: "Coast Mountains, throughout BC", desc: "A tough speckled rock made of multiple minerals. Very common!", type: "Igneous", hardness: "6–7", color: "Gray/Pink/White" },
+  { name: "Basalt", emoji: "⬛", where: "Interior Plateau, Columbia River area", desc: "Dark volcanic rock formed from lava flows millions of years ago.", type: "Igneous", hardness: "5–6", color: "Dark Gray/Black" },
+  { name: "Sandstone", emoji: "🟫", where: "Gulf Islands, Peace River", desc: "Made from tiny grains of sand pressed together over millions of years.", type: "Sedimentary", hardness: "3–4", color: "Tan/Brown/Red" },
+  { name: "Limestone", emoji: "⬜", where: "Northeastern BC, Rocky Mountains", desc: "Often contains ancient sea fossils! Made from old sea creatures.", type: "Sedimentary", hardness: "3", color: "White/Gray/Cream" },
+  { name: "Marble", emoji: "🔵", where: "Barkerville area, Kootenays", desc: "Limestone that got super hot and changed into beautiful marble!", type: "Metamorphic", hardness: "3–4", color: "White/Pink/Green" },
+  { name: "Slate", emoji: "🟦", where: "Cascades, Kootenay region", desc: "Flat rock that splits into thin layers. Used for roofs in old buildings.", type: "Metamorphic", hardness: "3–4", color: "Gray/Blue/Black" },
+  { name: "Obsidian", emoji: "🖤", where: "Nazko Valley, Anahim Lake", desc: "Volcanic glass! Sharper than a razor blade when broken.", type: "Igneous", hardness: "5–5.5", color: "Black/Glossy" },
+  { name: "Quartzite", emoji: "🤍", where: "Rocky Mountains, Kootenays", desc: "Super hard rock made from sandstone under extreme heat!", type: "Metamorphic", hardness: "7", color: "White/Gray/Pink" },
+  { name: "Copper Ore", emoji: "🟠", where: "Highland Valley, Keremeos", desc: "BC is famous for copper mining! Green or blue-green color when weathered.", type: "Mineral", hardness: "2.5–3", color: "Orange/Green/Blue" },
+  { name: "Gold", emoji: "🥇", where: "Cariboo, Fraser River, Klondike", desc: "The Cariboo Gold Rush happened right here in BC! Gold is still found today.", type: "Mineral", hardness: "2.5–3", color: "Golden Yellow" },
+  { name: "Ammonite", emoji: "🐚", where: "Peace River country", desc: "Spiral fossil of ancient sea creatures that lived 65+ million years ago!", type: "Fossil", hardness: "3–4", color: "Tan/Brown" },
+];
+
+// ========== GEMS DATA ==========
+const gemsData = [
+  {
+    name: "Diamond", emoji: "💎", value: "$3,000–$15,000+ per carat",
+    hardness: "10 (hardest!)", color: "Clear/White", found: "South Africa, Australia, Canada",
+    desc: "The hardest natural substance on Earth! Pure carbon squeezed for millions of years deep underground.",
+    funFact: "A diamond can scratch any other material, but only another diamond can scratch a diamond!",
+    rarity: "Very Rare"
+  },
+  {
+    name: "Emerald", emoji: "💚", value: "$500–$8,000 per carat",
+    hardness: "7.5–8", color: "Deep Green", found: "Colombia, Zambia, Brazil",
+    desc: "A bright green gemstone used by ancient Egyptians! The color comes from tiny amounts of chromium.",
+    funFact: "Cleopatra loved emeralds so much she claimed all Egyptian emerald mines as her own!",
+    rarity: "Rare"
+  },
+  {
+    name: "Ruby", emoji: "❤️", value: "$1,000–$15,000 per carat",
+    hardness: "9", color: "Deep Red", found: "Myanmar, Thailand, Mozambique",
+    desc: "One of the rarest gems! Its red color comes from chromium. Ancient people thought rubies held the power of fire.",
+    funFact: "In ancient times, warriors would put rubies under their skin before battle for protection!",
+    rarity: "Very Rare"
+  },
+  {
+    name: "Amethyst", emoji: "💜", value: "$10–$100 per carat",
+    hardness: "7", color: "Purple", found: "Brazil, Uruguay, BC Canada!",
+    desc: "A beautiful purple quartz crystal. Ancient Greeks thought it prevented drunkenness and wore it as jewelry!",
+    funFact: "Amethyst can be found right here in BC! It turns yellow-orange if you heat it up — that's how citrine is made.",
+    rarity: "Common"
+  },
+  {
+    name: "Sapphire", emoji: "💙", value: "$1,000–$6,000 per carat",
+    hardness: "9", color: "Deep Blue", found: "Sri Lanka, Madagascar, Montana USA",
+    desc: "Famous for its stunning blue color caused by titanium and iron. Very tough — second only to diamond in hardness.",
+    funFact: "Sapphires come in every color except red — when they're red, they're called rubies instead!",
+    rarity: "Rare"
+  },
+  {
+    name: "Opal", emoji: "🌈", value: "$50–$3,000 per carat",
+    hardness: "5.5–6.5", color: "Rainbow", found: "Australia, Ethiopia, Mexico",
+    desc: "The most colorful gemstone! It flashes all colors of the rainbow due to tiny silica spheres bending light.",
+    funFact: "Over 90% of the world's precious opals come from Australia. One opal mine found a $2.5 million gem!",
+    rarity: "Uncommon"
+  },
+  {
+    name: "Jade", emoji: "🟩", value: "$5–$3,000+ per gram",
+    hardness: "6–7", color: "Green/White", found: "BC Canada!, China, Myanmar",
+    desc: "BC's official gem! Ancient Chinese cultures valued jade more than gold for thousands of years.",
+    funFact: "The most expensive jade ever sold was a necklace that went for $27.4 million! Jade from BC's Fraser Valley is prized worldwide.",
+    rarity: "Uncommon"
+  },
+  {
+    name: "Topaz", emoji: "💛", value: "$10–$2,500 per carat",
+    hardness: "8", color: "Blue/Yellow/Clear", found: "Brazil, Pakistan, USA",
+    desc: "A very hard gemstone that comes in many colors. Pure topaz is colorless but impurities make it colorful!",
+    funFact: "The largest gemstone ever cut was a golden topaz — it weighed 22,892 carats, about 10 pounds!",
+    rarity: "Uncommon"
+  },
+  {
+    name: "Turquoise", emoji: "🩵", value: "$5–$500 per carat",
+    hardness: "5–6", color: "Blue-Green", found: "USA, Iran, Egypt",
+    desc: "One of the oldest gemstones used by humans — mined in Egypt 6,000 years ago! Its robin's-egg blue is iconic.",
+    funFact: "Ancient Egyptians buried their pharaohs with turquoise jewelry because they believed it protected them in the afterlife.",
+    rarity: "Common"
+  },
+  {
+    name: "Garnet", emoji: "🔴", value: "$5–$500 per carat",
+    hardness: "6.5–7.5", color: "Deep Red/Orange", found: "India, Tanzania, USA",
+    desc: "A deep red gem often found in metamorphic rocks. Ancient travelers used garnets as protection during travels.",
+    funFact: "Garnets aren't just red! They come in orange, yellow, purple, and even green — green garnets are rarer than emeralds.",
+    rarity: "Common"
+  },
+];
+
+// ========== CAMERA ==========
+async function toggleCamera() {
+  if (cameraActive) {
+    stopCamera();
+  } else {
+    await startCamera();
+  }
+}
+
+async function startCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    const video = document.getElementById('camera-video');
+    video.srcObject = cameraStream;
+    video.style.display = 'block';
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('preview-img').style.display = 'none';
+    document.getElementById('cam-toggle-btn').innerHTML = '<span class="btn-icon">⏹️</span>Stop';
+    document.getElementById('snap-btn').disabled = false;
+    document.getElementById('identify-btn').disabled = true;
+    cameraActive = true;
+    currentImageData = null;
+  } catch (e) {
+    showToast('📷 Camera not available — try uploading a photo!');
+  }
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  document.getElementById('camera-video').style.display = 'none';
+  document.getElementById('cam-toggle-btn').innerHTML = '<span class="btn-icon">📷</span>Camera';
+  document.getElementById('snap-btn').disabled = true;
+  cameraActive = false;
+  if (!currentImageData) {
+    document.getElementById('cam-placeholder').style.display = 'block';
+  }
+}
+
+function snapPhoto() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  currentImageData = canvas.toDataURL('image/jpeg', 0.85);
+  const preview = document.getElementById('preview-img');
+  preview.src = currentImageData;
+  preview.style.display = 'block';
+  stopCamera();
+  document.getElementById('identify-btn').disabled = false;
+  document.getElementById('result-card').classList.remove('show');
+  document.getElementById('loading-overlay').classList.remove('show');
+  showToast('📸 Photo taken! Now tap Identify!');
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (cameraActive) stopCamera();
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    currentImageData = e.target.result;
+    const preview = document.getElementById('preview-img');
+    preview.src = currentImageData;
+    preview.style.display = 'block';
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('identify-btn').disabled = false;
+    document.getElementById('result-card').classList.remove('show');
+    document.getElementById('loading-overlay').classList.remove('show');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+// ========== AI IDENTIFY ==========
+async function identifyRock() {
+  if (!currentImageData) return;
+  if (!apiKey) {
+    showApiKeyModal(true);
+    showToast('🔑 Please enter your API key first!');
+    return;
+  }
+  document.getElementById('result-card').classList.remove('show');
+  document.getElementById('loading-overlay').classList.add('show');
+  document.getElementById('identify-btn').disabled = true;
+
+  const base64Data = currentImageData.split(',')[1];
+  const mediaType = currentImageData.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+
+  const systemPrompt = `You are an enthusiastic, kid-friendly rock and mineral expert named Rocky the Rock Expert! 
+You identify rocks, minerals, and gemstones from photos. You explain things in a fun, exciting way that kids aged 6-12 can understand.
+Always respond ONLY with valid JSON in exactly this format (no other text):
+{
+  "name": "Rock/Mineral Name",
+  "type": "Igneous|Sedimentary|Metamorphic|Mineral|Gemstone|Fossil|Unknown",
+  "description": "2-3 sentences in kid-friendly language about what this rock is.",
+  "whereFound": "Where in the world (and mention BC Canada if relevant) you can find this rock. 1-2 sentences.",
+  "science": "1-2 sentences about the interesting science behind this rock.",
+  "funFact": "One amazing, surprising fun fact about this rock that kids will love!",
+  "confidence": "High|Medium|Low",
+  "color": "Main color(s) of the rock",
+  "hardness": "Mohs hardness scale number or range if known, else 'Unknown'"
+}
+If the image doesn't show a rock or you cannot identify it, still return JSON with name "Unknown Rock" and describe what you see.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } },
+            { type: 'text', text: 'Please identify this rock or mineral and return the JSON response.' }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        document.getElementById('loading-overlay').classList.remove('show');
+        document.getElementById('identify-btn').disabled = false;
+        showApiKeyModal(true);
+        showToast('❌ Invalid API key — please check it!');
+        return;
+      }
+      throw new Error(err.error?.message || `API error ${response.status}`);
+    }
+
+    const data = await response.json();
+    const rawText = data.content.map(b => b.text || '').join('');
+    let result;
+    try {
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      result = JSON.parse(clean);
+    } catch {
+      result = {
+        name: "Mystery Rock", type: "Unknown",
+        description: "Hmm, this is a tricky one! It looks like an interesting rock but I need a clearer photo to identify it.",
+        whereFound: "Rocks can be found everywhere!",
+        science: "Every rock has a unique mineral composition.",
+        funFact: "There are over 700 different types of rocks and minerals on Earth!",
+        confidence: "Low", color: "Various", hardness: "Unknown"
+      };
+    }
+    currentResult = result;
+    showResult(result);
+  } catch (err) {
+    document.getElementById('loading-overlay').classList.remove('show');
+    document.getElementById('identify-btn').disabled = false;
+    showToast('❌ Error: ' + (err.message || 'Check connection & try again'));
+  }
+}
+
+function showResult(result) {
+  document.getElementById('loading-overlay').classList.remove('show');
+  document.getElementById('identify-btn').disabled = false;
+  document.getElementById('result-name').textContent = result.name;
+  document.getElementById('result-type').textContent = result.type;
+  document.getElementById('result-desc').textContent = result.description;
+  document.getElementById('result-where').textContent = result.whereFound;
+  document.getElementById('result-science').textContent = result.science;
+  document.getElementById('result-fun').textContent = result.funFact;
+
+  const displayArea = document.getElementById('result-rock-display');
+  if (currentImageData) {
+    displayArea.innerHTML = `<img src="${currentImageData}" class="result-rock-img" alt="Rock">`;
+  } else {
+    displayArea.innerHTML = `<div class="result-rock-emoji">🪨</div>`;
+  }
+  document.getElementById('result-card').classList.add('show');
+  document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ========== COLLECTION ==========
+function saveToCollection() {
+  if (!currentResult) return;
+  const existing = collection.find(r => r.name.toLowerCase() === currentResult.name.toLowerCase());
+  if (existing) {
+    existing.count++;
+    if (currentImageData && !existing.image) existing.image = currentImageData;
+    showToast(`🪨 Found again! ${currentResult.name} × ${existing.count}`);
+  } else {
+    const isLocal = bcRocks.some(r => r.name.toLowerCase() === currentResult.name.toLowerCase());
+    collection.push({
+      id: Date.now(),
+      name: currentResult.name,
+      type: currentResult.type,
+      description: currentResult.description,
+      whereFound: currentResult.whereFound,
+      funFact: currentResult.funFact,
+      science: currentResult.science,
+      color: currentResult.color,
+      hardness: currentResult.hardness,
+      image: currentImageData || null,
+      count: 1,
+      isLocal,
+      dateAdded: new Date().toLocaleDateString()
+    });
+    showToast(`🎉 ${currentResult.name} added to your collection!`);
+  }
+  saveCollection();
+  renderCollection();
+}
+
+function saveCollection() {
+  // Store without images to keep storage small; images stored per item up to limit
+  localStorage.setItem('rockCollection', JSON.stringify(collection));
+}
+
+function renderCollection(filter) {
+  if (filter !== undefined) currentFilter = filter;
+  const grid = document.getElementById('rock-grid');
+  let filtered = collection;
+  if (currentFilter === 'local') {
+    filtered = collection.filter(r => r.isLocal);
+  } else if (currentFilter !== 'all') {
+    filtered = collection.filter(r => r.type === currentFilter);
+  }
+  document.getElementById('collection-count').textContent = `${collection.length} Rock${collection.length !== 1 ? 's' : ''}`;
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="e-icon">${collection.length === 0 ? '🧺' : '🔍'}</div>
+      <h3>${collection.length === 0 ? 'No rocks yet!' : 'None in this category!'}</h3>
+      <p>${collection.length === 0 ? 'Go find some rocks and scan them! 🪨' : 'Try a different filter!'}</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(rock => {
+    const imgHtml = rock.image
+      ? `<div class="rock-card-img"><img src="${rock.image}" alt="${rock.name}"></div>`
+      : `<div class="rock-card-img">${getRockEmoji(rock.type)}</div>`;
+    return `<div class="rock-card" onclick="openModal(${rock.id})">
+      ${imgHtml}
+      <div class="rock-card-info">
+        <div class="rock-card-name">${rock.name}</div>
+        <div class="rock-card-meta">
+          <div>
+            <div class="rock-card-type">${rock.type}</div>
+            ${rock.isLocal ? '<div class="local-badge" style="margin-top:3px;">🏔️ BC</div>' : ''}
+          </div>
+          <div class="found-count">🔍 ×${rock.count}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterCollection(filter, chip) {
+  document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  renderCollection(filter);
+}
+
+function getRockEmoji(type) {
+  const map = { Igneous: '🌋', Sedimentary: '🏜️', Metamorphic: '💎', Mineral: '✨', Gemstone: '💎', Fossil: '🦕', Unknown: '🪨' };
+  return map[type] || '🪨';
+}
+
+// ========== MODAL ==========
+function openModal(id) {
+  const rock = collection.find(r => r.id === id);
+  if (!rock) return;
+  selectedModalRockId = id;
+  document.getElementById('modal-name').textContent = rock.name;
+  document.getElementById('modal-count').textContent = `Found ${rock.count} time${rock.count !== 1 ? 's' : ''}! 🔍`;
+  document.getElementById('modal-desc').textContent = rock.description || '—';
+  document.getElementById('modal-where').textContent = rock.whereFound || '—';
+  document.getElementById('modal-fun').textContent = rock.funFact || '—';
+  const imgArea = document.getElementById('modal-img-area');
+  if (rock.image) {
+    imgArea.innerHTML = `<img src="${rock.image}" class="modal-rock-img" alt="${rock.name}">`;
+  } else {
+    imgArea.innerHTML = `<div class="modal-rock-emoji">${getRockEmoji(rock.type)}</div>`;
+  }
+  const localBadge = document.getElementById('modal-local-badge');
+  localBadge.innerHTML = rock.isLocal ? '<span class="local-badge" style="font-size:0.75rem;padding:4px 12px;">🏔️ Found in BC!</span>' : '';
+  document.getElementById('modal-stats').innerHTML = `
+    <div class="stat-box"><div class="s-label">Type</div><div class="s-val">${rock.type}</div></div>
+    <div class="stat-box"><div class="s-label">Color</div><div class="s-val">${rock.color || '—'}</div></div>
+    <div class="stat-box"><div class="s-label">Hardness</div><div class="s-val">${rock.hardness || '—'}</div></div>
+    <div class="stat-box"><div class="s-label">First Found</div><div class="s-val" style="font-size:0.8rem;">${rock.dateAdded}</div></div>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('show');
+  }
+}
+
+function deleteFromCollection() {
+  collection = collection.filter(r => r.id !== selectedModalRockId);
+  saveCollection();
+  renderCollection();
+  document.getElementById('modal-overlay').classList.remove('show');
+  showToast('🗑️ Rock removed from collection');
+}
+
+// ========== BC ROCKS PAGE ==========
+function renderBCRocks() {
+  const list = document.getElementById('bc-list');
+  list.innerHTML = bcRocks.map(rock => `
+    <div class="bc-rock-item">
+      <div class="bc-rock-icon">${rock.emoji}</div>
+      <div class="bc-rock-info">
+        <div class="bc-rock-name">${rock.name}</div>
+        <div class="bc-rock-where">📍 ${rock.where}</div>
+        <div class="bc-rock-desc">${rock.desc}</div>
+      </div>
+      <button class="found-here-btn" onclick="markBCRockFound('${rock.name}', '${rock.type}', '${rock.desc.replace(/'/g,"\\'")}', '${rock.where.replace(/'/g,"\\'")}')">
+        ✅ I found this!
+      </button>
+    </div>
+  `).join('');
+}
+
+function markBCRockFound(name, type, desc, where) {
+  const existing = collection.find(r => r.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    existing.count++;
+    showToast(`🏔️ Found again! ${name} × ${existing.count}`);
+  } else {
+    collection.push({
+      id: Date.now(),
+      name, type, description: desc,
+      whereFound: `Found in BC: ${where}`,
+      funFact: `This is one of BC's amazing local rocks!`,
+      science: '',
+      color: '', hardness: '',
+      image: null,
+      count: 1, isLocal: true,
+      dateAdded: new Date().toLocaleDateString()
+    });
+    showToast(`🎉 ${name} added to your collection!`);
+  }
+  saveCollection();
+  renderCollection();
+}
+
+// ========== GEMS PAGE ==========
+function renderGems() {
+  const list = document.getElementById('gems-list');
+  list.innerHTML = gemsData.map((gem, i) => `
+    <div class="gem-card">
+      <div class="gem-card-header" onclick="toggleGem(${i})">
+        <div class="gem-emoji">${gem.emoji}</div>
+        <div class="gem-title">
+          <div class="gem-name">${gem.name}</div>
+          <div class="gem-value-tag">💰 ${gem.value}</div>
+        </div>
+        <div class="gem-arrow" id="gem-arrow-${i}">▶</div>
+      </div>
+      <div class="gem-body" id="gem-body-${i}">
+        <p class="gem-desc">${gem.desc}</p>
+        <div class="gem-facts">
+          <div class="gem-fact">
+            <div class="gf-label">Hardness</div>
+            <div class="gf-val">${gem.hardness}</div>
+          </div>
+          <div class="gem-fact">
+            <div class="gf-label">Color</div>
+            <div class="gf-val">${gem.color}</div>
+          </div>
+          <div class="gem-fact">
+            <div class="gf-label">Found In</div>
+            <div class="gf-val" style="font-size:0.8rem;">${gem.found}</div>
+          </div>
+          <div class="gem-fact">
+            <div class="gf-label">Rarity</div>
+            <div class="gf-val">${gem.rarity}</div>
+          </div>
+        </div>
+        <div class="gem-fun-fact">⭐ <strong>Fun Fact:</strong> ${gem.funFact}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleGem(i) {
+  const body = document.getElementById(`gem-body-${i}`);
+  const arrow = document.getElementById(`gem-arrow-${i}`);
+  body.classList.toggle('show');
+  arrow.classList.toggle('open');
+}
+
+// ========== TABS ==========
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`page-${tab}`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab === 'collection') renderCollection();
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ========== INIT ==========
+renderBCRocks();
+renderGems();
+renderCollection();
+if (!apiKey) showApiKeyModal(true);
+</script>
+</body>
+</html>
